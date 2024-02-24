@@ -3,27 +3,27 @@ import threading
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 8081
-server_socket=socket.socket()
+server_socket = socket.socket()
 server_socket.bind((SERVER_HOST, SERVER_PORT))
 server_socket.listen()
 
-def clienthandle(conn,addr):
-        print(f"[*] Accepted connection from {addr[0]}:{addr[1]}")
+def clienthandle(conn, addr):
+    print(f"[*] Accepted connection from {addr[0]}:{addr[1]}")
 
-        operation = conn.recv(1024).decode()
-        filename = conn.recv(1024).decode()
+    operation = conn.recv(1024).decode()
+    filename = conn.recv(1024).decode()
 
-        if operation == 'download':
-            print(f"[*] Client requested file: {filename}")
-            send_file(conn, filename,addr)
-        elif operation == 'upload':
-            print(f"[*] Client uploading file: {filename}")
-            receive_file(conn, filename,addr)
+    if operation == 'download':
+        print(f"[*] Client requested file: {filename}")
+        send_file(conn, filename, addr)
+    elif operation == 'upload':
+        print(f"[*] Client uploading file: {filename}")
+        receive_file(conn, filename, addr)
 
 
-def receive_file(conn, filename,addr):
-    buffer_size = 4096   #Start with a reasonable buffer size
-    received_data = b''  # Initialize an empty byte string to hold received data
+def receive_file(conn, filename, addr):
+    buffer_size = 4096
+    received_data = b''
 
     try:
         with open(filename, 'wb') as file:
@@ -31,16 +31,16 @@ def receive_file(conn, filename,addr):
                 data = conn.recv(buffer_size)
                 if not data:
                     break
-                received_data += data  # Append received data to the buffer
-                buffer_size *= 2  # Double the buffer size for the next iteration
+                received_data += data
+                buffer_size *= 2
 
             file.write(received_data)
-            # Write all received data to the file
             print(f"[*] File received from {addr[0]}")
     except FileNotFoundError:
         print("[*] File not found")
 
-def send_file(conn, filename,addr):
+
+def send_file(conn, filename, addr):
     try:
         with open(filename, 'rb') as file:
             while True:
@@ -48,18 +48,19 @@ def send_file(conn, filename,addr):
                 if not data:
                     break
                 conn.sendall(data)
-           # conn.sendall(b"")
-        print(f"[*] File sent to {addr[0]} ")
+            print(f"[*] File sent to {addr[0]}")
     except FileNotFoundError:
         print("[*] File not found")
 
+
 def main():
-        print(f"[*] Listening on {SERVER_HOST}:{SERVER_PORT}")
-        while True:
-            conn, addr = server_socket.accept()
-            thread = threading.Thread(target=clienthandle, args=(conn,addr))
-            thread.start()
+    print(f"[*] Listening on {SERVER_HOST}:{SERVER_PORT}")
+    while True:
+        conn, addr = server_socket.accept()
+        thread = threading.Thread(target=clienthandle, args=(conn, addr))
+        thread.start()
 
 
 if __name__ == "__main__":
     main()
+

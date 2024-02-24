@@ -27,8 +27,8 @@ cl_socket, client_address = serv_sock.accept()
 print(f"Accepted connection from {client_address}")
 
 rec_buf_size = 16
-win_size = 4 * rec_buf_size
-mss = 20
+win_size = 20
+mss = 10
 cl_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, rec_buf_size)
 
 expected_seq_num = 0

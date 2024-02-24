@@ -23,8 +23,8 @@ cl_socket.connect(serv_addr)
 
 head_len = 12
 rec_buf_size = 4
-mss = 20
-win_size = mss
+mss = 10
+win_size = 20
 cl_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, rec_buf_size)
 
 seq_num = 0
