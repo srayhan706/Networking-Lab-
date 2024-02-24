@@ -28,14 +28,12 @@ print(f"Accepted connection from {client_address}")
 
 rec_buf_size = 16
 win_size = 20
-mss = 10
+mss = 20
 cl_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, rec_buf_size)
 
 expected_seq_num = 0
 ack_num = 0
-start_time = time.time()
 cl_socket.settimeout(1)
-timeout = 1
 received_data = b''
 buffer_data = b''
 

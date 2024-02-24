@@ -23,7 +23,7 @@ cl_socket.connect(serv_addr)
 
 head_len = 12
 rec_buf_size = 4
-mss = 10
+mss = 20
 win_size = 20
 cl_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, rec_buf_size)
 
@@ -36,8 +36,6 @@ with open(filename, "rb") as file:
 data_len = len(data)
 print(f"length of the file {data_len}")
 
-timeout = 2
-start_time = time.time()
 rec_win = 50
 sent_size = 0
 dup_ack = 0
