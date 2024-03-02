@@ -36,9 +36,7 @@ def main():
 
     expected_seq_num = 0
     ack_num = 0
-    start_time = time.time()
     cl_socket.settimeout(1)
-    timeout = 1
     received_data = b''
     buffer_data = b''
 

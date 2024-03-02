@@ -2,6 +2,7 @@ import socket
 import time
 import random
 
+
 def makeheader(seqNum=0, ackNum=0, ack=0, sf=0, rwnd=0):
     header = seqNum.to_bytes(4, byteorder="little")
     header += ackNum.to_bytes(4, byteorder="little")
@@ -9,6 +10,7 @@ def makeheader(seqNum=0, ackNum=0, ack=0, sf=0, rwnd=0):
     header += sf.to_bytes(1, byteorder="little")
     header += rwnd.to_bytes(2, byteorder="little")
     return header
+
 
 def fromheader(segment):
     seqNum = int.from_bytes(segment[:4], byteorder="little")
@@ -18,8 +20,6 @@ def fromheader(segment):
     rwnd = int.from_bytes(segment[10:12], byteorder="little")
     return seqNum, ackNum, ack, sf, rwnd
 
-def calculate_timeout(sample_rtt, alpha=0.125):
-    return (1 - alpha) * timeout + alpha * sample_rtt
 
 cl_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv_addr = ('127.0.0.1', 8888)
@@ -45,7 +45,11 @@ sent_size = 0
 dup_ack = 0
 last_ack = 0
 sample_rtt = []
-timeout = 1
+estimated_rtt = 0.4
+sample_rttinit = 0.3
+alpha = 0.125
+beta = 0.25
+dev_rtt = 0.35
 
 with open("sample_rtt.txt", "w") as sample_rtt_file, open("timeout.txt", "w") as timeout_file:
     while seq_num < data_len:
@@ -64,12 +68,22 @@ with open("sample_rtt.txt", "w") as sample_rtt_file, open("timeout.txt", "w") as
         print("Acknowledgment packet received")
         seqNum, ack_num, ack, sf, rec_win = fromheader(ack_pkt)
         print(f"Sequence number {seqNum}, expected Ackn_Number {exp_acq_num}, Ackn_Number {ack_num}")
-        sample_rtt_value = time.time() - start_time
-        sample_rtt.append(sample_rtt_value)
-        sample_rtt_file.write(str(sample_rtt_value) + "\n")
 
-        timeout = calculate_timeout(sample_rtt_value)
-        timeout_file.write(str(timeout) + "\n")
+        if not sf:
+            curr_time = time.time()
+            sample_rtt = round((curr_time - start_time)*1000,4)
+            estimated_rtt = alpha * sample_rtt + (1 - alpha) * estimated_rtt
+            dev_rtt = beta * abs(sample_rtt - estimated_rtt) + (1 - beta) * dev_rtt
+            timeout = round(estimated_rtt + 4 * dev_rtt,4)
+
+            # Store sample RTT and timeout values
+            sample_rtt_file.write(f"Packet Number: {ack_num}, Sample RTT: {sample_rtt}\n")
+            timeout_file.write(f"Packet Number: {ack_num}, Timeout: {timeout}\n")
+
+            print(f'Timing Updates : {estimated_rtt}, {sample_rtt}, {dev_rtt}, {timeout}')
+
+        if ack_num >= data_len:
+            break
 
         win_size = min(2 * rec_buf_size, rec_win)
 
