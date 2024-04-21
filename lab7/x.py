@@ -1,4 +1,4 @@
 import func
 curr = "X"
-func.setCurr(curr)
+func.set_curr(curr)
 func.main()

@@ -1,12 +1,12 @@
 
 
-ipPort={"U":(0000),"V":(0000), "W":(0000), "X":(0000), "Y":(0000), "Z":(0000)}
+ipport={"U":(0000), "V":(0000), "W":(0000), "X":(0000), "Y":(0000), "Z":(0000)}
 
 ipStart = 8730
 
-for i in ipPort:
+for i in ipport:
     ipStart += 1
-    ipPort[i] = ipStart
+    ipport[i] = ipStart
 
 def getIpPorts():
-    return ipPort
+    return ipport

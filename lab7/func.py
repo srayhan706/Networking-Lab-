@@ -10,24 +10,18 @@ import utils
 from concurrent.futures import ThreadPoolExecutor
 
 
-iPport = utils.getIpPorts()
-
+ipport = utils.getIpPorts()
 neighbour = []
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 G = {}
 
 
 curr = ""
-def setCurr(value):
+def set_curr(value):
     global curr
     curr = value
 
-
-
-
-
-
-def initialGraph():
+def init_graph():
     with open("init.txt") as f:
         for line in f:
             src, dest, cost = line.split()
@@ -41,7 +35,7 @@ def initialGraph():
                 G[dest][src] = int(cost)
 
     nodeCost, parentsMap = dijkstra(G, curr)
-    printCost(nodeCost, parentsMap)
+    print_cost(nodeCost, parentsMap)
 
 
 def dijkstra(G, start):
@@ -65,7 +59,8 @@ def dijkstra(G, start):
                 heap.heappush(pq, (nodeCost[neighbour], neighbour))
 
     return nodeCost, parentsMap
-def printShortestPath(parentsMap, start):
+
+def print_shortest_path(parentsMap, start):
     print("Shortest Path from", start)
     for destNode in parentsMap:
         path = []
@@ -80,16 +75,18 @@ def printShortestPath(parentsMap, start):
         path.append(start)
         print(f"{start} to {destNode}: {' -> '.join(reversed(path))}")
 
-def printCost(nodeCost, parentsMap):
+
+def print_cost(nodeCost, parentsMap):
     print("Cost of each node")
     for node in nodeCost:
         print(f"Cost to reach {node}: {nodeCost[node]}")
-    printShortestPath(parentsMap, curr)
+    print_shortest_path(parentsMap, curr)
 
-def msgToNeighbour(msg):
+
+def msg_to_neighbour(msg):
     for n in neighbour:
         neighbourIP = ''
-        neighbourPort = iPport[n]
+        neighbourPort = ipport[n]
         cl = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             cl.connect((neighbourIP, neighbourPort))
@@ -100,23 +97,23 @@ def msgToNeighbour(msg):
             cl.close()
 
         
-def msgSend():
+def msg_send():
     id = curr + " 60\n"
     s = ""
     for adj, weight in G[curr].items():
         s += curr + " " + adj + " " + str(weight) + "@"
 
     msg = id + s
-    msgToNeighbour(msg)
+    msg_to_neighbour(msg)
 
-def msgParse(msg):
+def msg_parse(msg):
     temp = msg
     msg = msg.split('\n')
     id, ttl = msg[0].split()
     if id == curr:
         return
     else:
-        msgToNeighbour(temp)
+        msg_to_neighbour(temp)
         msg = msg[1].split('@')
         for i in msg:
             try:
@@ -131,9 +128,9 @@ def msgParse(msg):
             G[dest][src] = int(cost)
         print("Graph updated")
         nodeCost, parentsMap = dijkstra(G, curr)
-        printCost(nodeCost, parentsMap)
+        print_cost(nodeCost, parentsMap)
 
-def updateGraph():
+def update_graph():
     while True:
         time.sleep(30)
         id = curr + " 60\n"
@@ -147,30 +144,30 @@ def updateGraph():
         print(f"Updated cost from {curr} to {node} is {cost}")
         s += curr + " " + node + " " + str(cost) + "@"
         msg = id + s
-        msgToNeighbour(msg)
+        msg_to_neighbour(msg)
         nodeCost, parentsMap = dijkstra(G, curr)
-        printCost(nodeCost, parentsMap)
+        print_cost(nodeCost, parentsMap)
 
 
-def handleClient(conn, addr):
+def handle_client(conn, addr):
     data = conn.recv(1024).decode()
-    msgParse(data)
+    msg_parse(data)
 
 def main():
     a = input("press ENTER to start")
-    initialGraph()
+    init_graph()
     print("[STARTING] Server is starting...")
-    server.bind(('', iPport[curr]))
+    server.bind(('', ipport[curr]))
     server.listen()
     IP = socket.gethostbyname(socket.gethostname())
     print(f"[LISTENING] Server is listening on {IP}")
     
     # Create a thread pool for handling client connections
     with ThreadPoolExecutor(max_workers=10) as executor:
-        initial_msg_thread = executor.submit(msgSend)
-        update_thread = executor.submit(updateGraph)
+        initial_msg_thread = executor.submit(msg_send)
+        update_thread = executor.submit(update_graph)
         
         while True:
             conn, addr = server.accept()
-            executor.submit(handleClient, conn, addr)
+            executor.submit(handle_client, conn, addr)
 
